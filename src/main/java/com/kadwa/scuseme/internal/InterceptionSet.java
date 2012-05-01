@@ -1,4 +1,4 @@
-package com.kadwa.scuseme.impl;
+package com.kadwa.scuseme.internal;
 
 import com.kadwa.scuseme.Interceptor;
 import org.slf4j.Logger;
@@ -16,7 +16,6 @@ public class InterceptionSet<I, T extends Interceptor> {
     public InterceptionPoint[] before;
     public InterceptionPoint[] chain;
     public InterceptionPoint[] after;
-    public InterceptionPoint[] async;
 
     private InterceptionSet(I intercepted) {
         this.intercepted = intercepted;
@@ -45,14 +44,12 @@ public class InterceptionSet<I, T extends Interceptor> {
             case BEFORE:
                 overrides.before = add( overrides.before, override );
                 break;
-            case AFTER:
-                overrides.after = add( overrides.after, override );
-                break;
             case CHAIN:
                 overrides.chain = add( overrides.chain, override );
                 break;
+            case AFTER:
             case ASYNC:
-                overrides.async = add( overrides.async, override );
+                overrides.after = add( overrides.after, override );
                 break;
             default:
                 logger.error("Unimplemented CallType: " + override.config.type());

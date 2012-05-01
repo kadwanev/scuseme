@@ -1,7 +1,7 @@
 package com.kadwa.scuseme;
 
-import com.kadwa.scuseme.impl.InterceptionImpl;
-import com.kadwa.scuseme.impl.InterceptionFactoryImpl;
+import com.kadwa.scuseme.internal.InterceptionImpl;
+import com.kadwa.scuseme.internal.InterceptionFactoryImpl;
 
 /**
  * Created by Neville Kadwa.

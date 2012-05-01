@@ -1,7 +1,10 @@
 package com.kadwa.scuseme;
 
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Neville Kadwa.
@@ -26,7 +29,7 @@ public class InterceptionConfig {
         return invoker;
     }
 
-    public Invoker getAsyncInvoker() {
+    public AsyncInvoker getAsyncInvoker() {
         return asyncInvoker;
     }
 

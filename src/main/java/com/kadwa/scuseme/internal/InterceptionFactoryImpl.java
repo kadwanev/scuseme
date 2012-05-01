@@ -1,4 +1,4 @@
-package com.kadwa.scuseme.impl;
+package com.kadwa.scuseme.internal;
 
 import com.kadwa.scuseme.Interception;
 import com.kadwa.scuseme.InterceptionConfig;
@@ -128,7 +128,7 @@ public class InterceptionFactoryImpl {
             sb.append(pre).append( "InvocationHandler: " ).append( printMethodOverrides( interceptor.invocationHandlers, true ) ).append( "\n" );
         }
         if (interceptor.interceptMethodMap != null) {
-            for ( Map.Entry<Method, InterceptionSet> entry : interceptor.interceptMethodMap.entrySet() ) {
+            for ( Map.Entry<Method, InterceptionSet<I,T>> entry : interceptor.interceptMethodMap.entrySet() ) {
                 sb.append(pre).append( entry.getKey().getName() ).append( ":" ).append( printMethodOverrides( entry.getValue(), false ) ).append( "\n" );
             }
         }
@@ -138,7 +138,7 @@ public class InterceptionFactoryImpl {
 
     private <T extends Interceptor> String printMethodOverrides(InterceptionSet overrides, boolean isInvocationHandler) {
         StringBuilder sb = new StringBuilder();
-        InterceptionPoint order[][] = {overrides.before, overrides.chain, overrides.after, overrides.async};
+        InterceptionPoint order[][] = {overrides.before, overrides.chain, overrides.after};
         for (InterceptionPoint[] t : order) {
             if (t != null && t.length > 0) {
                 sb.append( " " ).append( t[ 0 ].config.type().name() + ": " );

@@ -19,13 +19,16 @@ public @interface Interception {
         ASYNC
     }
     public int delay() default 3000; // Async delay in millis
-    public String mName() default "";
+    public String mName() default "";  // Altered name for matching method
+
+    // Options for Before interception
     public static enum BeforeMode {
         NO_EFFECT,
-        INTERRUPTABLE    // If return of interceptor is not-null, bypass method invocation
+        RETURNABLE    // If return of interceptor is not-null, bypass method invocation
     }
     public BeforeMode before() default BeforeMode.NO_EFFECT; // Only applicable for Before
 
+    // Options for After/Async interception
     public static enum AfterMode {
         NONE,            // Same signature as intercepted
         RETURN,          // Additional first parameter for non-void return type, must have same return signature

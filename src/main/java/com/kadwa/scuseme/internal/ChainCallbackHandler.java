@@ -1,4 +1,4 @@
-package com.kadwa.scuseme.impl;
+package com.kadwa.scuseme.internal;
 
 import com.kadwa.scuseme.Interceptor;
 import net.sf.cglib.proxy.MethodInterceptor;

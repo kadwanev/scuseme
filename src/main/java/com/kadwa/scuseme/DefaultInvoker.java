@@ -6,21 +6,21 @@ import java.lang.reflect.Method;
 /**
  * Created by Neville Kadwa.
  */
-public class DefaultInvoker implements Invoker {
+public class DefaultInvoker implements Invoker<Object> {
 
     @Override
     public <T extends Interceptor, I>
-        void execute(Interception config, T interceptor, I intercepted, Method method, Object[] calcArgs) throws Throwable
+        Object execute(Interception config, T interceptor, I intercepted, Method method, Object[] calcArgs) throws Throwable
     {
         interceptor.setInterceptedClass(intercepted);
-        method.invoke(interceptor, calcArgs);
+        return method.invoke(interceptor, calcArgs);
     }
 
     @Override
     public <T extends Interceptor, I>
-        void execute(Interception config, InvocationHandler handler, T interceptor, I intercepted, Method method, Object[] calcArgs) throws Throwable
+        Object execute(Interception config, InvocationHandler handler, T interceptor, I intercepted, Method method, Object[] calcArgs) throws Throwable
     {
         interceptor.setInterceptedClass(intercepted);
-        handler.invoke(interceptor, method, calcArgs);
+        return handler.invoke(interceptor, method, calcArgs);
     }
 }

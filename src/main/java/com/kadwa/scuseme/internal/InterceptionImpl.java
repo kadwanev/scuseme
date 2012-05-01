@@ -1,4 +1,4 @@
-package com.kadwa.scuseme.impl;
+package com.kadwa.scuseme.internal;
 
 import com.kadwa.scuseme.Interception;
 import com.kadwa.scuseme.Interceptor;
@@ -25,7 +25,7 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
     final I baseIntercepted;
     final Class baseInterceptedClass;
     // Interceptor Method, Intercepted Method - no updates after initialization
-    HashMap<Method, InterceptionSet> interceptMethodMap = null;
+    HashMap<Method, InterceptionSet<I,T>> interceptMethodMap = null;
     InterceptionSet<I,T> invocationHandlers = null;
     boolean hasChaining = false;
 
@@ -53,7 +53,7 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
 
     void initializeInterceptMethodMap(Class sourceClass, Class targetClass, I intercepted, T interceptor) {
         if (interceptMethodMap == null)
-            interceptMethodMap = new HashMap<Method, InterceptionSet>();
+            interceptMethodMap = new HashMap<Method, InterceptionSet<I,T>>();
         for (Method m : targetClass.getMethods()) {
             Interception a = m.getAnnotation( Interception.class );
             if (a != null) {
@@ -114,13 +114,20 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
                     }
                     break;
                 case RETURN_EXCEPTION:
-                    int returnOffset = (m.getReturnType() != void.class ? 1 : 0);
-                    Class[] c = new Class[paramTypes.length+1+returnOffset];
-                    int i = 0;
-                    c[i] = m.getReturnType();
-                    i+=returnOffset;
-                    c[i++] = Throwable.class;
-                    System.arraycopy( paramTypes, 0, c, i, paramTypes.length );
+                    int returnOffset = 0;
+                    if (m.getReturnType() != void.class) {
+                        returnOffset = 1;
+                        if (m.getReturnType() != paramTypes[0]) {
+                            logger.error("Illegal method matching. Return type of interceptor must match return type of intercepted: " + m.toString());
+                            return paramTypes;
+                        }
+                    }
+                    if (paramTypes[returnOffset] != Throwable.class) {
+                        logger.error("Illegal method matching. Exception parameter of interceptor must be Throwable: " + m.toString());
+                        return paramTypes;
+                    }
+                    Class[] c = new Class[paramTypes.length-returnOffset-1];
+                    System.arraycopy( paramTypes, returnOffset+1, c, 0, paramTypes.length-returnOffset-1 );
                     paramTypes = c;
                     break;
                 default:
@@ -142,14 +149,27 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
                 }
             } else
             if (a.after() == Interception.AfterMode.RETURN_EXCEPTION) {
+                Object[] callArgs;
+                int argOffset;
                 if (m == null || m.getReturnType() != void.class) {
+                    callArgs = new Object[(args == null ? 0 : args.length)+2];
+                    callArgs[0] = callReturn;
+                    callArgs[1] = callException;
+                    argOffset = 2;
+                } else {
+                    callArgs = new Object[(args == null ? 0 : args.length)+1];
+                    callArgs[0] = callException;
+                    argOffset = 1;
                 }
+                if (args != null)
+                    System.arraycopy( args, 0, callArgs, argOffset, args.length );
+                return callArgs;
             }
         }
         return args;
     }
 
-    private void doCallback(final InterceptionPoint[] calls,
+    private Object doCallback(final InterceptionPoint[] calls,
                             final I intercepted,
                             final Object[] args,
                             final Method interceptedMethod,
@@ -158,6 +178,9 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
                             final Throwable callException) throws Throwable {
         if (calls != null) {
             for ( final InterceptionPoint call : calls ) {
+                // If entered with exception, only apply to after/RETURN_EXCEPTION configs
+                if (callException != null && call.config.after() != Interception.AfterMode.RETURN_EXCEPTION)
+                    continue;
                 final Object[] calcArgs = calcMethodParams( call.config, call.method, args, callReturn, callException );
                 if ( call.config.type() != Interception.CallType.ASYNC ) {
                     factory.config.getInvoker().execute(call.config, call.interceptor, intercepted, call.method, calcArgs);
@@ -168,6 +191,8 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
         }
         if (handlers != null) {
             for ( final InterceptionPoint call : handlers ) {
+                if (callException != null && call.config.after() != Interception.AfterMode.RETURN_EXCEPTION)
+                    continue;
                 final Object[] calcArgs = calcMethodParams( call.config, null, args, callReturn, callException );
                 if ( call.config.type() != Interception.CallType.ASYNC ) {
                     factory.config.getInvoker().execute(call.config, (InvocationHandler) call.interceptor, call.interceptor, intercepted, interceptedMethod, calcArgs);
@@ -176,6 +201,7 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
                 }
             }
         }
+        return null;
     }
 
     private Object doChainCallback(InterceptionPoint[] calls, Object[] args,
@@ -216,21 +242,24 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
      */
     public Object invoke( Object proxy, Method method, final Object[] args ) throws Throwable {
         final InterceptionSet<I,T> overrides = (interceptMethodMap != null ? interceptMethodMap.get( method ) : null);
-        Object toReturn;
+        Object toReturn = null;
         try {
             if (overrides == null && invocationHandlers == null )
                 return method.invoke( this.baseIntercepted, args );
 
-            doCallback( (overrides != null ? overrides.before : null),
+            toReturn = doCallback( (overrides != null ? overrides.before : null),
                     this.baseIntercepted, args, method,
                     (invocationHandlers != null ? invocationHandlers.before : null ),
                     null, null);
 
-            toReturn = doChainCallback( (overrides != null ? overrides.chain : null),
-                    args, this.baseInterceptedClass,
-                    (overrides != null ? overrides.intercepted : this.baseIntercepted),
-                    method,
-                    (invocationHandlers != null ? invocationHandlers.chain : null ) );
+            if (toReturn == null) {
+                // Before interruptor returned result, skipping invocation
+                toReturn = doChainCallback( (overrides != null ? overrides.chain : null),
+                        args, this.baseInterceptedClass,
+                        (overrides != null ? overrides.intercepted : this.baseIntercepted),
+                        method,
+                        (invocationHandlers != null ? invocationHandlers.chain : null ) );
+            }
 
             doCallback( (overrides != null ? overrides.after : null),
                     (overrides != null ? overrides.intercepted : this.baseIntercepted),
@@ -238,15 +267,17 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
                     (invocationHandlers != null ? invocationHandlers.after : null ),
                     toReturn, null);
 
-            doCallback( ( overrides != null ? overrides.async : null ),
-                    ( overrides != null ? overrides.intercepted : this.baseIntercepted ), args, method,
-                    ( invocationHandlers != null ? invocationHandlers.async : null ),
-                    toReturn, null);
-
             return toReturn;
         }
         catch (InvocationTargetException itex) {
-            throw itex.getTargetException();
+            Throwable exception = itex.getTargetException();
+            doCallback( (overrides != null ? overrides.after : null),
+                    (overrides != null ? overrides.intercepted : this.baseIntercepted),
+                    args, method,
+                    (invocationHandlers != null ? invocationHandlers.after : null ),
+                    toReturn, exception);
+
+            throw exception;
         }
     }
 

@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -18,7 +19,11 @@ public class DefaultAsyncInvoker implements AsyncInvoker {
     protected ScheduledExecutorService executorService;
 
     public DefaultAsyncInvoker(InterceptionConfig configuration) {
-        this.executorService = Executors.newScheduledThreadPool(configuration.getAsyncExecutorPoolSize());
+        this.executorService = createScheduledExecutorService(configuration);
+    }
+
+    protected ScheduledExecutorService createScheduledExecutorService(InterceptionConfig configuration) {
+        return Executors.newScheduledThreadPool(configuration.getAsyncExecutorPoolSize());
     }
 
     protected void handleException(Throwable t) {
@@ -26,7 +31,7 @@ public class DefaultAsyncInvoker implements AsyncInvoker {
     }
 
     public <T extends Interceptor, I>
-        void execute(final Interception config, final T interceptor, final I intercepted, final Method method, final Object[] calcArgs)
+        ScheduledFuture execute(final Interception config, final T interceptor, final I intercepted, final Method method, final Object[] calcArgs)
     {
         Runnable w = new Runnable() {
             @Override
@@ -40,12 +45,12 @@ public class DefaultAsyncInvoker implements AsyncInvoker {
                 }
             }
         };
-        executorService.schedule(w, config.delay(), TimeUnit.MILLISECONDS);
+        return executorService.schedule(w, config.delay(), TimeUnit.MILLISECONDS);
     }
 
     @Override
     public <T extends Interceptor, I>
-        void execute(final com.kadwa.scuseme.Interception config, final InvocationHandler handler, final T interceptor, final I intercepted, final Method method, final Object[] calcArgs)
+        ScheduledFuture execute(final Interception config, final InvocationHandler handler, final T interceptor, final I intercepted, final Method method, final Object[] calcArgs)
     {
         Runnable w = new Runnable() {
             @Override
@@ -59,6 +64,6 @@ public class DefaultAsyncInvoker implements AsyncInvoker {
                 }
             }
         };
-        executorService.schedule(w, config.delay(), TimeUnit.MILLISECONDS);
+        return executorService.schedule(w, config.delay(), TimeUnit.MILLISECONDS);
     }
 }
