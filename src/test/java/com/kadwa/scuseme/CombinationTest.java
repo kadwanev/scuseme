@@ -19,59 +19,59 @@ public class CombinationTest extends TestCase {
     }
 
     public void testMultipleOverrideCombination() {
-        Test test = new Test();
-        BeforeTest.BeforeInterceptor beforeInterceptor = new BeforeTest.BeforeInterceptor(test);
-        AfterTest.AfterInterceptor afterInterceptor = new AfterTest.AfterInterceptor(test);
+        Example example = new Example();
+        BeforeTest.BeforeInterceptor beforeInterceptor = new BeforeTest.BeforeInterceptor(example);
+        AfterTest.AfterInterceptor afterInterceptor = new AfterTest.AfterInterceptor(example);
 
-        Test intercepted1, intercepted;
+        Example intercepted1, intercepted;
 
-        intercepted1 = interceptionFactory.createInterceptor(beforeInterceptor, test);
+        intercepted1 = interceptionFactory.createInterceptor(beforeInterceptor, example);
         intercepted = interceptionFactory.createInterceptor(afterInterceptor, intercepted1);
 
         assertSame( intercepted, intercepted1 );
 
         intercepted.mA();
-        assertEquals( 1, test.aCount );
+        assertEquals( 1, example.aCount );
         assertEquals( 1, beforeInterceptor.aCount );
         assertEquals( 1, afterInterceptor.aCount );
 
     }
 
     public void testMultipleOverrideCombination2() {
-        Test test = new Test();
-        BeforeTest.BeforeInterceptor beforeInterceptor = new BeforeTest.BeforeInterceptor(test);
-        AfterTest.AfterInterceptor afterInterceptor = new AfterTest.AfterInterceptor(test);
+        Example example = new Example();
+        BeforeTest.BeforeInterceptor beforeInterceptor = new BeforeTest.BeforeInterceptor(example);
+        AfterTest.AfterInterceptor afterInterceptor = new AfterTest.AfterInterceptor(example);
 
-        ITest intercepted1, intercepted;
+        IExample intercepted1, intercepted;
 
-        intercepted1 = interceptionFactory.createInterceptor(ITest.class, afterInterceptor, test);
-        intercepted = interceptionFactory.createInterceptor(ITest.class, beforeInterceptor, intercepted1);
+        intercepted1 = interceptionFactory.createInterceptor(IExample.class, afterInterceptor, example);
+        intercepted = interceptionFactory.createInterceptor(IExample.class, beforeInterceptor, intercepted1);
 
         assertSame( intercepted, intercepted1 );
 
         intercepted.mA();
-        assertEquals( 1, test.aCount );
+        assertEquals( 1, example.aCount );
         assertEquals( 1, afterInterceptor.aCount );
         assertEquals( 1, beforeInterceptor.aCount );
     }
 
 
     public void testInterceptorCollapsing() throws Throwable {
-        Test test = new Test();
+        Example example = new Example();
 
-        BeforeTest.BeforeInterceptor beforeInterceptor = new BeforeTest.BeforeInterceptor(test);
-        AfterTest.AfterInterceptor afterInterceptor = new AfterTest.AfterInterceptor(test);
-        AfterTest.AsyncInterceptor asyncInterceptor = new AfterTest.AsyncInterceptor(test);
+        BeforeTest.BeforeInterceptor beforeInterceptor = new BeforeTest.BeforeInterceptor(example);
+        AfterTest.AfterInterceptor afterInterceptor = new AfterTest.AfterInterceptor(example);
+        AfterTest.AsyncInterceptor asyncInterceptor = new AfterTest.AsyncInterceptor(example);
         ChainTest.ChainInterceptor chainInterceptor = new ChainTest.ChainInterceptor();
         ChainTest.ChainInterceptor chainInterceptor1 = new ChainTest.ChainInterceptor();
 
-        ITest intercepted1, intercepted2, intercepted3, intercepted4, intercepted5;
+        IExample intercepted1, intercepted2, intercepted3, intercepted4, intercepted5;
 
-        intercepted1 = interceptionFactory.createInterceptor(ITest.class, beforeInterceptor, test);
-        intercepted2 = interceptionFactory.createInterceptor(ITest.class, chainInterceptor, intercepted1);
-        intercepted3 = interceptionFactory.createInterceptor(ITest.class, afterInterceptor, intercepted2);
-        intercepted4 = interceptionFactory.createInterceptor(ITest.class, chainInterceptor1, intercepted3);
-        intercepted5 = interceptionFactory.createInterceptor(ITest.class, asyncInterceptor, intercepted4);
+        intercepted1 = interceptionFactory.createInterceptor(IExample.class, beforeInterceptor, example);
+        intercepted2 = interceptionFactory.createInterceptor(IExample.class, chainInterceptor, intercepted1);
+        intercepted3 = interceptionFactory.createInterceptor(IExample.class, afterInterceptor, intercepted2);
+        intercepted4 = interceptionFactory.createInterceptor(IExample.class, chainInterceptor1, intercepted3);
+        intercepted5 = interceptionFactory.createInterceptor(IExample.class, asyncInterceptor, intercepted4);
 
         assertSame( intercepted1, intercepted2 );
         assertSame( intercepted2, intercepted3 );
@@ -79,7 +79,7 @@ public class CombinationTest extends TestCase {
         assertSame( intercepted4, intercepted5 );
 
         /* All enhanced classes must be combined, but one warning will be printed when multiple chains are used */
-        intercepted1 = interceptionFactory.createInterceptor(beforeInterceptor, test);
+        intercepted1 = interceptionFactory.createInterceptor(beforeInterceptor, example);
         intercepted2 = interceptionFactory.createInterceptor(chainInterceptor, intercepted1);
         intercepted3 = interceptionFactory.createInterceptor(afterInterceptor, intercepted2);
         intercepted4 = interceptionFactory.createInterceptor(chainInterceptor1, intercepted3);

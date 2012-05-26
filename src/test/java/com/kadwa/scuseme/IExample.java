@@ -3,7 +3,7 @@ package com.kadwa.scuseme;
 /**
  * Created by Neville Kadwa.
  */
-public interface ITest {
+public interface IExample {
     public void mA();
     public void mB();
     public void mB(int p);

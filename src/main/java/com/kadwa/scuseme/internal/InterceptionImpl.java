@@ -175,7 +175,9 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
                             final Method interceptedMethod,
                             final InterceptionPoint[] handlers,
                             final Object callReturn,
-                            final Throwable callException) throws Throwable {
+                            final Throwable callException) throws Throwable
+    {
+        Object firstReturn = null;
         if (calls != null) {
             for ( final InterceptionPoint call : calls ) {
                 // If entered with exception, only apply to after/RETURN_EXCEPTION configs
@@ -183,7 +185,9 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
                     continue;
                 final Object[] calcArgs = calcMethodParams( call.config, call.method, args, callReturn, callException );
                 if ( call.config.type() != Interception.CallType.ASYNC ) {
-                    factory.config.getInvoker().execute(call.config, call.interceptor, intercepted, call.method, calcArgs);
+                    Object r = factory.config.getInvoker().execute(call.config, call.interceptor, intercepted, call.method, calcArgs);
+                    if (firstReturn == null && call.config.before() == Interception.BeforeMode.RETURNABLE)
+                        firstReturn = r;
                 } else {
                     factory.config.getAsyncInvoker().execute(call.config, call.interceptor, intercepted, call.method, calcArgs);
                 }
@@ -195,13 +199,15 @@ public class InterceptionImpl<I, T extends Interceptor> implements InvocationHan
                     continue;
                 final Object[] calcArgs = calcMethodParams( call.config, null, args, callReturn, callException );
                 if ( call.config.type() != Interception.CallType.ASYNC ) {
-                    factory.config.getInvoker().execute(call.config, (InvocationHandler) call.interceptor, call.interceptor, intercepted, interceptedMethod, calcArgs);
+                    Object r = factory.config.getInvoker().execute(call.config, (InvocationHandler) call.interceptor, call.interceptor, intercepted, interceptedMethod, calcArgs);
+                    if (firstReturn == null && call.config.before() == Interception.BeforeMode.RETURNABLE)
+                        firstReturn = r;
                 } else {
                     factory.config.getAsyncInvoker().execute(call.config, (InvocationHandler) call.interceptor, call.interceptor, intercepted, interceptedMethod, calcArgs);
                 }
             }
         }
-        return null;
+        return firstReturn;
     }
 
     private Object doChainCallback(InterceptionPoint[] calls, Object[] args,

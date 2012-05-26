@@ -1,10 +1,67 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="scuseme" default="compile">
-    
-    
-    <!-- ================================= 
-          target: resolve              
-         ================================= -->
-    <target name="resolve" description="--> retrieve dependencies with ivy">
-        <ivy:retrieve />
+<project name="scuseme" default="compile" basedir=".">
+
+    <!-- set global properties for this build -->
+    <property name="src" location="src/main/java"/>
+    <property name="test" location="src/test/java"/>
+    <property name="build" location="build"/>
+    <property name="test.out" location="build/testout"/>
+    <property name="dist"  location="dist"/>
+
+    <path id="lib.path">
+        <fileset dir="lib">
+            <include name="**/*.jar"/>
+        </fileset>
+        <pathelement location="${build}/main"/>
+        <pathelement location="${build}/test"/>
+    </path>
+
+
+    <target name="init">
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${build}/main"/>
+        <mkdir dir="${build}/test"/>
     </target>
+
+    <target name="compile" depends="init" description="compile the source " >
+        <!-- Compile the java code from ${src} into ${build} -->
+        <javac srcdir="${src}" destdir="${build}/main" includeantruntime="false">
+            <classpath refid="lib.path" />
+        </javac>
+        <javac srcdir="${test}" destdir="${build}/test" includeantruntime="false">
+            <classpath refid="lib.path" />
+        </javac>
+    </target>
+
+    <target name="dist" depends="compile" description="generate the distribution" >
+        <!-- Create the distribution directory -->
+        <mkdir dir="${dist}"/>
+
+        <jar jarfile="${dist}/scuseme.jar" basedir="${build}/main"/>
+    </target>
+
+    <target name="unit-test" depends="compile">
+        <mkdir dir="${test.out}"/>
+
+        <junit printsummary="yes" haltonfailure="yes">
+
+            <classpath refid="lib.path" />
+
+            <formatter type="plain"/>
+            <formatter type="xml"/>
+
+            <batchtest fork="yes" todir="${test.out}">
+                <fileset dir="${test}">
+                    <include name="**/*Test.java"/>
+                </fileset>
+            </batchtest>
+
+        </junit>
+    </target>
+
+    <target name="clean" description="clean up" >
+        <!-- Delete the ${build} and ${dist} directory trees -->
+        <delete dir="${build}"/>
+        <delete dir="${dist}"/>
+    </target>
+
 </project>

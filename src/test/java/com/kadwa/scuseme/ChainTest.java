@@ -21,7 +21,7 @@ public class ChainTest extends TestCase {
         interceptionFactory = new InterceptionFactory();
     }
 
-    public static class ChainInterceptor implements Interceptor<ITest> {
+    public static class ChainInterceptor implements Interceptor<IExample> {
         public int aCount = 0;
         public int bCount = 0;
         public int bOverrideCount = 0;
@@ -29,8 +29,8 @@ public class ChainTest extends TestCase {
         public int cOverrideCount = 0;
         public int noCallCount = 0;
 
-        public ITest interceptedInstance = null;
-        public void setInterceptedClass( ITest interceptedInstance ) {
+        public IExample interceptedInstance = null;
+        public void setInterceptedClass( IExample interceptedInstance ) {
             this.interceptedInstance = interceptedInstance;
         }
 
@@ -57,24 +57,24 @@ public class ChainTest extends TestCase {
         }
     }
 
-    private void runChainTests(ITest intercepted, Test test, ChainInterceptor interceptor) {
+    private void runChainTests(IExample intercepted, Example example, ChainInterceptor interceptor) {
         intercepted.mA();intercepted.mA();
-        assertSame( test, interceptor.interceptedInstance );
-        assertEquals( 2, test.aCount );
+        assertSame(example, interceptor.interceptedInstance );
+        assertEquals( 2, example.aCount );
         assertEquals( 2, interceptor.aCount );
         intercepted.mB();intercepted.mB();intercepted.mB();
-        assertEquals( 3, test.bCount );
+        assertEquals( 3, example.bCount );
         assertEquals( 3, interceptor.bCount );
         intercepted.mB( 20 );
-        assertEquals( 0, test.bOverrideCount );
+        assertEquals( 0, example.bOverrideCount );
         assertEquals( 1, interceptor.bOverrideCount );
         assertEquals( "Parent", intercepted.mC() );
-        assertEquals( 1, test.cCount );
+        assertEquals( 1, example.cCount );
         assertEquals( 1, interceptor.cCount );
         assertEquals( 68, intercepted.mC( "abc" ) );
-        assertEquals( 1, test.cOverrideCount );
+        assertEquals( 1, example.cOverrideCount );
         assertEquals( 1, interceptor.cOverrideCount );
-        assertEquals( 2, test.cCount );
+        assertEquals( 2, example.cCount );
         assertEquals( 1, interceptor.cCount );
 
         try {
@@ -91,35 +91,35 @@ public class ChainTest extends TestCase {
     }
 
     public void testChainOverride() {
-        Test test = new Test();
+        Example example = new Example();
 
         ChainInterceptor interceptor = new ChainInterceptor();
 
-        ITest intercepted = interceptionFactory.createInterceptor(ITest.class, interceptor, test);
+        IExample intercepted = interceptionFactory.createInterceptor(IExample.class, interceptor, example);
 
-        runChainTests( intercepted, test, interceptor );
+        runChainTests( intercepted, example, interceptor );
     }
 
     public void testChainOverride2() {
-        Test test = new Test();
+        Example example = new Example();
 
         ChainInterceptor interceptor = new ChainInterceptor();
 
-        Test intercepted = interceptionFactory.createInterceptor(interceptor, test);
+        Example intercepted = interceptionFactory.createInterceptor(interceptor, example);
 
-        runChainTests( intercepted, test, interceptor );
+        runChainTests( intercepted, example, interceptor );
     }
 
     public void testMultipleChained() {
-        Test test = new Test();
+        Example example = new Example();
 
         ChainInterceptor chain1 = new ChainInterceptor();
         ChainInterceptor chain2 = new ChainInterceptor();
         ChainInterceptor chain3 = new ChainInterceptor();
 
-        Test intercepted1, intercepted2, intercepted;
+        Example intercepted1, intercepted2, intercepted;
 
-        intercepted1 = interceptionFactory.createInterceptor(chain1, test);
+        intercepted1 = interceptionFactory.createInterceptor(chain1, example);
         intercepted2 = interceptionFactory.createInterceptor(chain2, intercepted1);
         intercepted = interceptionFactory.createInterceptor(chain3, intercepted2);
 
@@ -127,38 +127,38 @@ public class ChainTest extends TestCase {
         assertSame( intercepted1, intercepted2 );
 
         intercepted.mB();
-        assertEquals( 1, test.bCount );
+        assertEquals( 1, example.bCount );
         assertEquals( 1, chain1.bCount );
         assertEquals( 1, chain2.bCount );
         assertEquals( 1, chain3.bCount );
-        assertEquals( 66, intercepted.mC( "test" ) );
+        assertEquals( 66, intercepted.mC( "example" ) );
     }
 
     public void testMultipleChained2() {
-        Test test = new Test();
+        Example example = new Example();
 
         ChainInterceptor chain1 = new ChainInterceptor();
         ChainInterceptor chain2 = new ChainInterceptor();
         ChainInterceptor chain3 = new ChainInterceptor();
 
-        ITest intercepted1, intercepted2, intercepted;
+        IExample intercepted1, intercepted2, intercepted;
 
-        intercepted1 = interceptionFactory.createInterceptor(ITest.class, chain1, test);
-        intercepted2 = interceptionFactory.createInterceptor(ITest.class, chain2, intercepted1);
-        intercepted = interceptionFactory.createInterceptor(ITest.class, chain3, intercepted2);
+        intercepted1 = interceptionFactory.createInterceptor(IExample.class, chain1, example);
+        intercepted2 = interceptionFactory.createInterceptor(IExample.class, chain2, intercepted1);
+        intercepted = interceptionFactory.createInterceptor(IExample.class, chain3, intercepted2);
 
         assertNotSame( intercepted1, intercepted );
         assertNotSame( intercepted1, intercepted2 );
 
         intercepted.mB();
-        assertEquals( 1, test.bCount );
+        assertEquals( 1, example.bCount );
         assertEquals( 1, chain1.bCount );
         assertEquals( 1, chain2.bCount );
         assertEquals( 1, chain3.bCount );
-        assertEquals( 66, intercepted.mC( "test" ) );
+        assertEquals( 66, intercepted.mC( "example" ) );
     }
 
-    public static class InvocationInterceptorChain implements Interceptor<Test>, InvocationHandler {
+    public static class InvocationInterceptorChain implements Interceptor<Example>, InvocationHandler {
         public int aCount = 0;
         public int bCount = 0;
         public int bOverrideCount = 0;
@@ -166,8 +166,8 @@ public class ChainTest extends TestCase {
         public int cOverrideCount = 0;
         public int noCallCount = 0;
 
-        Test interceptedInstance;
-        public void setInterceptedClass( Test interceptedInstance ) {
+        Example interceptedInstance;
+        public void setInterceptedClass( Example interceptedInstance ) {
             this.interceptedInstance = interceptedInstance;
         }
 
@@ -195,24 +195,24 @@ public class ChainTest extends TestCase {
         }
     }
 
-    private void runChainTests(ITest intercepted, Test test, InvocationInterceptorChain interceptor) {
+    private void runChainTests(IExample intercepted, Example example, InvocationInterceptorChain interceptor) {
         intercepted.mA();intercepted.mA();
-        assertSame( test, interceptor.interceptedInstance );
-        assertEquals( 2, test.aCount );
+        assertSame(example, interceptor.interceptedInstance );
+        assertEquals( 2, example.aCount );
         assertEquals( 2, interceptor.aCount );
         intercepted.mB();intercepted.mB();intercepted.mB();
-        assertEquals( 3, test.bCount );
+        assertEquals( 3, example.bCount );
         assertEquals( 3, interceptor.bCount );
         intercepted.mB( 20 );
-        assertEquals( 0, test.bOverrideCount );
+        assertEquals( 0, example.bOverrideCount );
         assertEquals( 1, interceptor.bOverrideCount );
         assertEquals( "Parent", intercepted.mC() );
-        assertEquals( 1, test.cCount );
+        assertEquals( 1, example.cCount );
         assertEquals( 1, interceptor.cCount );
         assertEquals( 68, intercepted.mC( "abc" ) );
-        assertEquals( 1, test.cOverrideCount );
+        assertEquals( 1, example.cOverrideCount );
         assertEquals( 1, interceptor.cOverrideCount );
-        assertEquals( 2, test.cCount );
+        assertEquals( 2, example.cCount );
         assertEquals( 1, interceptor.cCount );
 
         try {
@@ -230,23 +230,23 @@ public class ChainTest extends TestCase {
 
 
     public void testTargetInvocationHandlerChain() {
-        Test test = new Test();
+        Example example = new Example();
 
         InvocationInterceptorChain interceptor = new InvocationInterceptorChain();
 
-        ITest intercepted = interceptionFactory.createInterceptor(ITest.class, interceptor, test);
+        IExample intercepted = interceptionFactory.createInterceptor(IExample.class, interceptor, example);
 
-        runChainTests( intercepted, test, interceptor );
+        runChainTests( intercepted, example, interceptor );
     }
 
     public void testTargetInvocationHandlerChain2() {
-        Test test = new Test();
+        Example example = new Example();
 
         InvocationInterceptorChain interceptor = new InvocationInterceptorChain();
 
-        Test intercepted = interceptionFactory.createInterceptor(interceptor, test);
+        Example intercepted = interceptionFactory.createInterceptor(interceptor, example);
 
-        runChainTests( intercepted, test, interceptor );
+        runChainTests( intercepted, example, interceptor );
     }
 
 }

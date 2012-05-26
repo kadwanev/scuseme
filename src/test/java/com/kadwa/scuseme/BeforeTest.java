@@ -21,25 +21,25 @@ public class BeforeTest extends TestCase {
         interceptionFactory = new InterceptionFactory();
     }
 
-    public static class BeforeInterceptor implements Interceptor<ITest> {
+    public static class BeforeInterceptor implements Interceptor<IExample> {
         public int aCount = 0;
         public int testACount;
         public int cCount = 0;
 
-        public Test test;
-        public BeforeInterceptor(Test test) {
-            this.test = test;
+        public Example example;
+        public BeforeInterceptor(Example example) {
+            this.example = example;
         }
 
-        public ITest interceptedInstance = null;
-        public void setInterceptedClass( ITest interceptedInstance ) {
+        public IExample interceptedInstance = null;
+        public void setInterceptedClass( IExample interceptedInstance ) {
             this.interceptedInstance = interceptedInstance;
         }
 
         @Interception(type = Interception.CallType.BEFORE)
         public void mA() {
             aCount++;
-            this.testACount = test.aCount;
+            this.testACount = example.aCount;
         }
 
         @Interception(type = Interception.CallType.BEFORE)
@@ -50,38 +50,38 @@ public class BeforeTest extends TestCase {
     }
 
     public void testBeforeOverride() {
-        Test test = new Test();
+        Example example = new Example();
 
-        BeforeInterceptor interceptor = new BeforeInterceptor(test);
+        BeforeInterceptor interceptor = new BeforeInterceptor(example);
 
-        ITest intercepted = interceptionFactory.createInterceptor(ITest.class, interceptor, test);
+        IExample intercepted = interceptionFactory.createInterceptor(IExample.class, interceptor, example);
 
-        assertEquals( 0, test.aCount );
+        assertEquals( 0, example.aCount );
         assertEquals( 0, interceptor.aCount );
         intercepted.mA();
-        assertEquals( 1, test.aCount );
+        assertEquals( 1, example.aCount );
         assertEquals( 1, interceptor.aCount );
         assertEquals( 0, interceptor.testACount );
         intercepted.mA();
-        assertEquals( 2, test.aCount );
+        assertEquals( 2, example.aCount );
         assertEquals( 2, interceptor.aCount );
         assertEquals( 1, interceptor.testACount );
         assertEquals( "Parent", intercepted.mC() );
-        assertEquals( 1, test.cCount );
+        assertEquals( 1, example.cCount );
         assertEquals( 1, interceptor.cCount );
     }
 
-    public static class RenameInterceptor implements Interceptor<Test> {
+    public static class RenameInterceptor implements Interceptor<Example> {
         public int aCount = 0;
         public int argsCount = 0;
 
-        public Test test;
-        public RenameInterceptor(Test test) {
-            this.test = test;
+        public Example example;
+        public RenameInterceptor(Example example) {
+            this.example = example;
         }
 
-        public Test interceptedInstance = null;
-        public void setInterceptedClass( Test interceptedInstance ) {
+        public Example interceptedInstance = null;
+        public void setInterceptedClass( Example interceptedInstance ) {
             this.interceptedInstance = interceptedInstance;
         }
 
@@ -93,23 +93,23 @@ public class BeforeTest extends TestCase {
     }
 
     public void testMethodRename() {
-        Test test = new Test();
+        Example example = new Example();
 
-        RenameInterceptor interceptor = new RenameInterceptor(test);
+        RenameInterceptor interceptor = new RenameInterceptor(example);
 
-        ITest interceped = interceptionFactory.createInterceptor(interceptor, test);
+        IExample interceped = interceptionFactory.createInterceptor(interceptor, example);
 
         interceped.mA();
-        assertEquals( 1, test.aCount );
+        assertEquals( 1, example.aCount );
         assertEquals( 1, interceptor.aCount );
     }
 
-    public static class InvocationInterceptorBefore implements Interceptor<Test>, InvocationHandler {
+    public static class InvocationInterceptorBefore implements Interceptor<Example>, InvocationHandler {
         public int count = 0;
         public int instanceACount = 0;
 
-        Test instance;
-        public void setInterceptedClass( Test interceptedInstance ) {
+        Example instance;
+        public void setInterceptedClass( Example interceptedInstance ) {
             this.instance = interceptedInstance;
         }
 
@@ -122,46 +122,73 @@ public class BeforeTest extends TestCase {
     }
 
     public void testTargetInvocationHandlerBefore() {
-        Test test = new Test();
+        Example example = new Example();
 
         InvocationInterceptorBefore interceptor = new InvocationInterceptorBefore();
 
-        ITest interceped = interceptionFactory.createInterceptor(interceptor, test);
+        IExample intercepted = interceptionFactory.createInterceptor(interceptor, example);
 
-        interceped.mA();
-        assertEquals( 1, test.aCount );
+        intercepted.mA();
+        assertEquals( 1, example.aCount );
         assertEquals( 1, interceptor.count );
         assertEquals( 0, interceptor.instanceACount );
-        interceped.mB();
-        assertEquals( 1, test.aCount );
+        intercepted.mB();
+        assertEquals( 1, example.aCount );
         assertEquals( 2, interceptor.count );
         assertEquals( 1, interceptor.instanceACount );
-        interceped.mA();
-        assertEquals( 2, test.aCount );
+        intercepted.mA();
+        assertEquals( 2, example.aCount );
         assertEquals( 3, interceptor.count );
         assertEquals( 1, interceptor.instanceACount );
     }
 
     public void testTargetInvocationHandlerBefore2() {
-        Test test = new Test();
+        Example example = new Example();
 
         InvocationInterceptorBefore interceptor = new InvocationInterceptorBefore();
 
-        ITest interceped = interceptionFactory.createInterceptor(ITest.class, interceptor, test);
+        IExample intercepted = interceptionFactory.createInterceptor(IExample.class, interceptor, example);
 
-        interceped.mA();
-        assertEquals( 1, test.aCount );
+        intercepted.mA();
+        assertEquals( 1, example.aCount );
         assertEquals( 1, interceptor.count );
         assertEquals( 0, interceptor.instanceACount );
-        interceped.mB();
-        assertEquals( 1, test.aCount );
+        intercepted.mB();
+        assertEquals( 1, example.aCount );
         assertEquals( 2, interceptor.count );
         assertEquals( 1, interceptor.instanceACount );
-        interceped.mA();
-        assertEquals( 2, test.aCount );
+        intercepted.mA();
+        assertEquals( 2, example.aCount );
         assertEquals( 3, interceptor.count );
         assertEquals( 1, interceptor.instanceACount );
     }
 
+    public static class BeforeReturnableInterceptor implements Interceptor<Example> {
+        public Example example;
+        public BeforeReturnableInterceptor(Example example) {
+            this.example = example;
+        }
+
+        public Example interceptedInstance = null;
+        public void setInterceptedClass( Example interceptedInstance ) {
+            this.interceptedInstance = interceptedInstance;
+        }
+
+        @Interception(type = Interception.CallType.BEFORE, before = Interception.BeforeMode.RETURNABLE)
+        public String mC() {
+            return "Cached";
+        }
+
+    }
+
+    public void testBeforeReturnable() throws Exception {
+        Example example = new Example();
+
+        BeforeReturnableInterceptor interceptor = new BeforeReturnableInterceptor(example);
+
+        IExample intercepted = interceptionFactory.createInterceptor(IExample.class, interceptor, example);
+
+        assertEquals("Cached", intercepted.mC());
+    }
 }
 
